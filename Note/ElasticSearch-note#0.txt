@@ -1,0 +1,85 @@
+# h-j-13
+# 2017.10.2
+
+# USE
+# ==================================================
+
+# 插入
+# --------------------------------------------------
+# 1. PUT
+PUT .../{_index}/{_type}/{_id}
+
+?:id 为必选项 必须要自带 不能自生成吗？
+
+# 查询
+# --------------------------------------------------
+# 2. GET
+- id
+GET .../{_index}/{_type}/{_id}
+
+- search
+GET .../{_index}/{_type}/_search
+=》 展示所有数据 - GET .../_search
+
+- Query DSL
+
+# 查询某个字段
+GET .../{_index}/{_type}/_search
+{
+    "query" : {
+        "match" : {
+            "{_fields}" : "{key_words}"
+        }
+    }
+}
+
+# 其实准确来说，ES中的查询操作分为2种：查询（query）和过滤（filter）。
+# 查询即是之前提到的query查询，它（查询）默认会计算每个返回文档的得分，然后根据得分排序。
+# 而过滤（filter）只会筛选出符合的文档，并不计算得分，且它可以缓存文档。
+# 所以，单从性能考虑，过滤比查询更快。
+
+# 换句话说，过滤适合在大范围筛选数据，而查询则适合精确匹配数据。
+# 一般应用时，应先使用过滤操作过滤数据，然后使用查询匹配数据。
+
+
+# 过滤器 ???
+GET .../{_index}/{_type}/_search
+{
+    "query" : {
+        "bool": {               # ? 只有bool后能用filter吗？    query -> bool -> filter
+            "filter": {
+                "range" : {     # range-范围      gt-大于
+                    "{_fields}" : { "gt" : 30 }
+                }
+            }
+        }
+    }
+}
+
+# 全文检索
+GET .../{_index}/{_type}/_search
+{
+    "query" : {
+        "match" : {                                     # 1 全文匹配
+        "match_phrase" : {                              # 2 精准匹配，段落匹配
+            "{_fields}" : "{key_words}"
+        }
+    }
+}
+
+# 高亮            (非常适用与搜索的场景)
+GET .../{_index}/{_type}/_search
+{
+    "query" : {...},
+    "highlight": {
+        "fields" : {
+            "{_fields}" : {}            # "{_fields}" -> 需要高亮的段落        ？ -> "{_fields}"对应的value有什么用
+        }
+    }
+}
+
+# 汇总、统计
+# --------------------------------------------------
+# 统计
+
+2 demo on http://www.learnes.net/getting_started/tutorial_aggregations.html

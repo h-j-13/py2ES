@@ -10,8 +10,10 @@ a python script for operate ElasticSearch and synchronize MySQL data to ElasticS
 
 ### Contact
 
-H-J-13(@`13)
-z.g.13@163.com/h.j.13.new@gmail.com
-Harbin Institute of Technology at Weihai
-
-[`13 blog](http://www.houjie13.com)
+H-J-13(@`13)       
+Harbin Institute of Technology at Weihai         
+  
+[`13 blog](http://www.houjie13.com)   
+z.g.13@163.com      
+h.j.13.new@gmail.com      
+   

@@ -1,0 +1,18 @@
+# h-j-13
+# 2017.9.29
+
+# Install
+# ==================================================
+# 启动以 apt-get 方式安装的 ElasticSearch
+# 一般在 /usr/share/elasticsearch 目录
+sudo /etc/init.d/elasticsearch start
+
+# 启动 Kibana
+#/usr/share/kibana$ sudo bin/kibana
+
+# ElasticSearch
+# ==================================================
+# 对应关系
+关系数据库(MySQL) ⇒ 数据库 ⇒ 表    ⇒ 行    ⇒ 列(Columns)
+Elasticsearch   ⇒ 索引   ⇒ 类型  ⇒ 文档  ⇒ 字段(Fields)
+                 _index  _type  _doc   _fields

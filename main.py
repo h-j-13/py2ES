@@ -12,7 +12,7 @@ es.indices.create(index='my-index', ignore)
 
 # 插入数据,(这里省略插入其他两条数据，后面用)
 es.index(index="my-index", doc_type="test-type", id=01, body={"any": "data01", "timestamp": datetime.now()})
-# {u'_type':u'test-type',u'created':True,u'_shards':{u'successful':1,u'failed':0,u'total':ElasticSearch-note#install},u'_version':1,u'_index':u'my-index',u'_id':u'1}
+# {u'_type':u'test-type',u'created':True,u'_shards':{u'successful':1,u'failed':0,u'total':ElasticSearch-note#install.txt},u'_version':1,u'_index':u'my-index',u'_id':u'1}
 # 也可以，在插入数据的时候再创建索引test-index
 es.index(index="test-index", doc_type="test-type", id=42, body={"any": "data", "timestamp": datetime.now()})
 
@@ -30,7 +30,7 @@ print(res)
 # {u'hits':
 #    {
 #    u'hits': [
-#        {u'_score': 1.0, u'_type': u'test-type', u'_id': u'ElasticSearch-note#install', u'_source': {u'timestamp': u'2016-01-20T10:53:58.562000', u'any': u'data02'}, u'_index': u'my-index'},
+#        {u'_score': 1.0, u'_type': u'test-type', u'_id': u'ElasticSearch-note#install.txt', u'_source': {u'timestamp': u'2016-01-20T10:53:58.562000', u'any': u'data02'}, u'_index': u'my-index'},
 #        {u'_score': 1.0, u'_type': u'test-type', u'_id': u'1', u'_source': {u'timestamp': u'2016-01-20T10:53:36.997000', u'any': u'data01'}, u'_index': u'my-index'},
 #        {u'_score': 1.0, u'_type': u'test-type', u'_id': u'3', u'_source': {u'timestamp': u'2016-01-20T11:09:19.403000', u'any': u'data033'}, u'_index': u'my-index'}
 #    ],

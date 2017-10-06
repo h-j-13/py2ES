@@ -1,0 +1,179 @@
+# h-j-13
+# 2017.10.6
+
+# 文档
+# ==================================================
+数据结构 - json数据结构
+字符串
+数字
+布尔值
+对象
+数组 list
+ - 特殊类型(代表日期的字符串\代表地理位置的对象)
+
+# 创建文档【索引】 - PUT -POST(自动使用UUIDs->_id)
+# ==================================================
+PUT .../{_index}/{_type}/{_id}
+{
+...
+"created": true                                        "created": 表示是否创建成功 true-新文档，false-修改了旧文档
+...
+}
+
+POST .../{_index}/{_type}                               会返回一个22位的字符串(UUIDs) 作为自增id
+{
+...
+}
+
+# --------------------------------------------------
+然而，我们可能已经决定好了_id，
+所以需要告诉Elasticsearch只有当 _index， _type以及 _id这3个属性【全部相同的文档不存在时才接受我们的请求。】
+实现这个目的有两种方法
+
+1 查询中添加op_type参数：
+PUT .../{_index}/{_type}/{_id}?op_type=create
+{ ... }
+
+2 或者在请求最后添加 /_create:
+PUT .../{_index}/{_type}/{_id}/_create
+{ ... }
+
+1 == 2
+因为大部分情况不喜欢使用自建的UUIDs来作为_index
+
+# 获取多个文档 - _mget                                    一直会是 HTTPcode = 200
+# --------------------------------------------------
+GET /_mget                                              相应的响应也被包含在一个 "docs":[...] 中
+{
+   "docs" : [
+      {
+         "_index" : "x",
+         "_type" :  "x",
+         "_id" :    1
+      },
+      ...
+      {
+         "_index" : "x",
+         "_type" :  "x",
+         "_id" :    2,
+         "_source": "views"             # 可以请求制定的数据
+      }
+   ]
+}
+
+# 指定默认的_index _type
+GET .../{_index}/{_type}/_mget
+{
+   "docs" : [
+      { "_id" : 2 },
+      { "_type" : "x", "_id" :   1 }        # 可以重新指定新的_types
+   ]
+}
+
+# 所有的文档拥有相同的_index 以及 _type，直接在请求中添加ids的数组即可
+GET .../{_index}/{_type}/_mget
+{
+   "ids" : [ "1", "2"... ]
+}
+
+# 获取/搜索 文档 GET ?pretty ?_source[=...]
+# ==================================================
+
+# 展示详尽的数据
+GET .../{_index}/{_type}/{_id}?pretty                   找到-200 找不到-404
+
+                                                        若要检查是否存在 可以使用
+                                                        curl -i -XHEAD 来获取http头判别记录是否已经存在
+
+                                                        当然，这个反馈只代表了你查询的那一刻文档不存在，
+                                                        但是不代表几毫秒后它不存在，很可能与此同时，另一个进程正在创建文档。
+# 展示制定字段
+GET .../{_index}/{_type}/{_id}?_source[=filed1,filed2,...]
+
+# 更新文档 - PUT
+# ==================================================
+PUT .../{_index}/{_type}/{_id}
+{
+...
+"_version" : {2},                                       会返回一个version字段表示文档的修改
+...                                                     一般是每次 +1
+}
+
+# 局部更新 - POST _update
+# --------------------------------------------------
+POST .../{_index}/{_type}/{_id}_update
+{
+添加新的数据 / 替换之前相同key值的数据
+}
+
+# 使用脚本进行更新 【可以理解为基于之前文档内数据而进行的更新-需要通过脚本更新】  Demo:http://www.learnes.net/data/partial_update.html
+                 更新一篇可能不存在的文档 参数-upsert 当文档中不存在一下内容是 应该被创建
+
+# 更新和冲突 - retry_on_conflict
+POST .../{_index}/{_type}/{_id}/_update?retry_on_conflict=5
+设定retry_on_conflict参数来设置自动完成这项请求的次数，它的默认值是0 【错误自动重试次数】
+
+> note
+为了避免丢失数据，更新API会在获取步骤中获取当前文档中的_version，
+然后将其传递给重新索引步骤中的索引请求。如果其他的进程在这两部之间修改了这个文档，那么_version就会不同，这样更新就会失败。
+
+对于很多的局部更新来说，文档有没有发生变化实际上是不重要的。
+例如，两个进程都要增加页面浏览的计数器，谁先谁后其实并不重要 —— 发生冲突时只需要重新来过即可。
+
+
+# 删除文档 - DELETE
+# ==================================================
+DELETE .../{_index}/{_type}/{_id}                       文档存在-200 不存在-404    依然会使 _version +1
+
+# 版本控制/处理冲突 - _version
+# ==================================================
+每当有索引、put和删除的操作时，无论文档有没有变化，它的_version都会增加。Elasticsearch使用_version来确保所有的改变操作都被正确排序。
+使用 _version 来处理冲突
+
+PUT/DELETE/GET .../{_index}/{_type}/{_id}?_version=1     在操作前先确认只当_version为1的时候才进行操作
+
+
+# 批量操作 - POST _bulk
+# ==================================================
+POST /_bulk
+{ action: { metadata }}\n
+{ request body        }\n
+{ action: { metadata }}\n
+{ request body        }\n
+...
+
+
+A DEMO
+POST /_bulk
+{ "delete": { "_index": "website", "_type": "blog", "_id": "123" }}             # 删除
+{ "create": { "_index": "website", "_type": "blog", "_id": "123" }}             # 创建
+{ "title":    "My first blog post" }
+{ "index":  { "_index": "website", "_type": "blog" }}
+{ "title":    "My second blog post" }
+{ "update": { "_index": "website", "_type": "blog", "_id": "123", "_retry_on_conflict" : 3} }       # 更新
+{ "doc" : {"title" : "My updated blog post"} }
+
+
+> note
+注意delete操作是如何处理request body的,你可以在它之后直接执行新的操作。 【因为 delete 没有 metadata】
+请记住最后有换行符
+
+Elasticsearch会返回含有items的列表、它的顺序和我们请求的顺序是相同的    【所有的请求都被成功执行。】
+
+bulk请求是独立的，每一条的失败与否 都不会影响到其他的请求。
+
+# 你依旧可以在metadata行中使用_index以及_type来重写数据，未声明的将会使用URL中的配置作为默认值：
+POST /website/log/_bulk
+{ "index": {}}
+{ "event": "User logged in" }
+{ "index": { "_type": "blog" }}
+{ "title": "Overriding the default type" }
+
+
+# 批量操作数据量的选择
+# --------------------------------------------------
+试着去批量索引越来越多的文档。当性能开始下降的时候，就说明你的数据量太大了。
+一般比较好初始数量级是1000到5000个文档，或者你的文档很大，你就可以试着减小队列。
+有的时候看看批量请求的物理大小是很有帮助的。1000个1KB的文档和1000个1MB的文档的差距将会是天差地别的。
+
+【比较好的初始批量容量是5-15MB。】
